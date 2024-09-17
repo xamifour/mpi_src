@@ -1,0 +1,48 @@
+{% extends "usermanager/layout.html" %}
+{% load i18n %}
+
+{% block title %} {{ block.super }} | Payment List {% endblock %}
+
+{% block content %}
+
+<div class="table-responsive">
+    <table b/order="1" class="table">
+        <thead>
+            <tr>
+                <th>User Profile</th>
+                <th>Profile</th>
+                <th>Copy From</th>
+                <th>Method</th>
+                <th>Transaction Start</th>
+                <th>Transaction End</th>
+                <th>Transaction Status</th>
+                <th>User Message</th>
+                <th>Currency</th>
+                <th>Price</th>
+                <th>Paystack Reference</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in recent_user_payments %}
+            <tr>
+                <td>{{ payment.user_profile }}</td>
+                <td>{{ payment.profile }}</td>
+                <td>{{ payment.copy_from }}</td>
+                <td>{{ payment.method }}</td>
+                <td>{{ payment.trans_start }}</td>
+                <td>{{ payment.trans_end }}</td>
+                <td>{{ payment.trans_status }}</td>
+                <td>{{ payment.user_message }}</td>
+                <td>{{ payment.currency }}</td>
+                <td>{{ payment.price }}</td>
+                <td>{{ payment.paystack_reference }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="11">No records found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

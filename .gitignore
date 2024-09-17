@@ -1,0 +1,22 @@
+# Django stuff:
+*.log
+instructions.txt
+instructions.cfg
+notes.txt
+django_errors.log
+python_mikrotik_automation.py
+scripts_run.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+Pipfile
+
+# celery
+celerybeat-schedule.db
+dump.rdb

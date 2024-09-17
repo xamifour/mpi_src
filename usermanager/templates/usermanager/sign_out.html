@@ -1,0 +1,10 @@
+{% extends "usermanager/layout.html" %}
+
+
+{% block content %}
+  <div class="container">
+    <h2>Logged Out</h2>
+    <p>You have been successfully logged out.</p>
+    <a href="{% url 'sign_in' %}" class="btn btn-primary">Sign In Again</a>
+  </div>
+{% endblock %}

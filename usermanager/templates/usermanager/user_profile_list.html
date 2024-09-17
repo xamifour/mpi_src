@@ -1,0 +1,35 @@
+{% extends "usermanager/layout.html" %}
+{% load i18n %}
+
+{% block title %} {{ block.super }} | User Profiles {% endblock %}
+
+{% block content %}
+<h2>User Profiles</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>Profile</th>
+            <th>State</th>
+            <th>End Time</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user_profile in user_profiles %}
+            <tr>
+                <td>{{ user_profile.user.username }}</td>
+                <td>{{ user_profile.profile.name }}</td>
+                <td>{{ user_profile.state }}</td>
+                <td>{{ user_profile.end_time }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="4">No user profiles found.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+

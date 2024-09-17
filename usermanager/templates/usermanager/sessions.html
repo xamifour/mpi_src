@@ -1,0 +1,58 @@
+{% extends "usermanager/layout.html" %}
+{% load i18n %}
+
+{% block title %} {{ block.super }} | Sessions List {% endblock %}
+
+{% block content %}
+
+<h2>Sessions</h2>
+<div class="table-responsive">
+        <table b/order="1" class="table">
+            <thead>
+                <tr>
+                    <!-- <th>Session ID</th> -->
+                    <!-- <th>User</th> -->
+                    <!-- <th>NAS IP Address</th> -->
+                    <!-- <th>NAS Port ID</th> -->
+                    <!-- <th>NAS Port Type</th> -->
+                    <th>Calling Station ID</th>
+                    <th>Download</th>
+                    <th>Upload</th>
+                    <th>Uptime</th>
+                    <th>Status</th>
+                    <th>Started</th>
+                    <th>Ended</th>
+                    <th>Terminate Cause</th>
+                    <th>User Address</th>
+                    <!-- <th>Last Accounting</th> -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for session in user_sessions %}
+                    <tr>
+                        <!-- <td>{{ session.session_id }}</td> -->
+                        <!-- <td>{{ session.user.username }}</td> -->
+                        <!-- <td>{{ session.nas_ip_address }}</td> -->
+                        <!-- <td>{{ session.nas_port_id }}</td> -->
+                        <!-- <td>{{ session.nas_port_type }}</td> -->
+                        <td>{{ session.calling_station_id }}</td>
+                        <td>{{ session.download }}</td>
+                        <td>{{ session.upload }}</td>
+                        <td>{{ session.uptime }}</td>
+                        <td>{{ session.get_session_status }}</td>
+                        <td>{{ session.started }}</td>
+                        <td>{{ session.ended }}</td>
+                        <td>{{ session.terminate_cause }}</td>
+                        <td>{{ session.user_address }}</td>
+                        <!-- <td>{{ session.last_accounting_packet }}</td> -->
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="14">No sessions found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+{% endblock %}

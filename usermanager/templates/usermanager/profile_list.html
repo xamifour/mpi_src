@@ -1,0 +1,53 @@
+<!-- mpi_src/usermanager/templates/profile_list.html -->
+{% extends "usermanager/layout.html" %}
+{% load i18n %}
+
+{% block title %} {{ block.super }} | Plans {% endblock %}
+
+{% block content %}
+{% if request.user.is_authenticated %}
+<div class="container">
+    <div class="row">
+        {% for profile in profiles %}
+        <div class="col-md-3 mb-4">
+            <div class="card card-pricing card-pricing-focus card-primary">
+                <div class="card-header">
+                    <!-- Name of the profile for users -->
+                    <h4 class="card-title">{{ profile.name_for_users }}</h4>
+                    <div class="card-price">
+                        <!-- Price of the profile -->
+                        <span class="price"><small>₵</small>{{ profile.price }}</span>
+                        <!-- <span class="text">/mo</span> -->
+                    </div>
+                </div>
+                <div class="card-body">
+                    <ul class="specification-list">
+                        <!-- Assuming "starts_when" and "validity" are specifications -->
+                        <li>
+                            <span class="name-specification">Start When</span>
+                            <span class="status-specification">{{ profile.starts_when }}</span>
+                        </li>
+                        <li>
+                            <span class="name-specification">Validity</span>
+                            <span class="status-specification">{{ profile.validity }}</span>
+                        </li>
+                        <li>
+                            <span class="name-specification">Override Shared Users</span>
+                            <span class="status-specification">{{ profile.override_shared_users }}</span>
+                        </li>
+                        <!-- Add more specifications if needed -->
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <!-- <button class="btn btn-light btn-block"><a href="{% url 'initiate_payment' profile.id %}">Buy Now</a></button> -->
+                    <a class="btn btn-light btn-block" href="{% url 'initiate_payment' profile.id %}">Buy Now</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+    <p>Please log in to see available profiles.</p>
+{% endif %}
+{% endblock %}
