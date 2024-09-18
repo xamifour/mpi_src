@@ -8,7 +8,7 @@ python_mikrotik_automation.py
 scripts_run.py
 
 # Environments
-.env
+# .env
 .venv
 env/
 venv/
