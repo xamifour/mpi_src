@@ -4,6 +4,7 @@
 # │   ├── models.py
 
 # mpi_src/usermanager/models.py
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
@@ -11,8 +12,10 @@ from django.utils.translation import gettext_lazy as _
 MAX_LEN = 67
 
 class User(AbstractUser):
-    group = models.CharField(_('group'), max_length=MAX_LEN, blank=True, null=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    mikrotik_id = models.CharField(max_length=20, unique=True, blank=True, null=True)  # Field to store MikroTik ID
     name = models.CharField(_('name'), max_length=MAX_LEN, unique=True, blank=True, null=True)
+    group = models.CharField(_('group'), max_length=MAX_LEN, blank=True, null=True)
     disabled = models.BooleanField(_('disabled'), default=False)
     otp_secret = models.CharField(_('otp-secret'), max_length=256, blank=True, null=True)
     shared_users = models.PositiveIntegerField(_('shared-users'), default=1)
@@ -21,7 +24,8 @@ class User(AbstractUser):
     phone = models.CharField(_('phone'), max_length=10, blank=True, null=True, help_text='0201234567')
     address = models.CharField(_('address'), max_length=256, blank=True, null=True)
     notes = models.CharField(_('notes'), max_length=1024, blank=True, null=True)
-    mikrotik_id = models.CharField(max_length=20, unique=True, blank=True, null=True)  # Field to store MikroTik ID
+    created  = models.DateTimeField(_('created'), auto_now_add=True, null=True, db_index=True, )
+    modified = models.DateTimeField(_('modified'), auto_now=True, null=True)
 
 
     def save(self, *args, **kwargs):
@@ -37,14 +41,17 @@ class User(AbstractUser):
 
 
 class Profile(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    mikrotik_id = models.CharField(max_length=20, unique=True, blank=True, null=True)  # Field to store MikroTik ID
     name = models.CharField(_('name'), max_length=MAX_LEN, unique=True)
     name_for_users = models.CharField(_('name for users'), max_length=67, blank=True, null=True, 
                                 help_text='Friendly name for user, eg Plan-100MB')
     price = models.DecimalField(_('price'), max_digits=10, decimal_places=2)
-    starts_when = models.CharField(_('starts when'), max_length=MAX_LEN, default='assigned')
     validity = models.CharField(_('validity'), max_length=MAX_LEN, default='30d 00:00:00')
+    starts_when = models.CharField(_('starts when'), max_length=MAX_LEN, default='assigned')
     override_shared_users = models.CharField(_('override shared users'), max_length=MAX_LEN, default='off')
-    mikrotik_id = models.CharField(max_length=20, unique=True, blank=True, null=True)  # Field to store MikroTik ID
+    created  = models.DateTimeField(_('created'), auto_now_add=True, null=True, db_index=True, )
+    modified = models.DateTimeField(_('modified'), auto_now=True, null=True)
 
     class meta:
         ordering = '-mikrotik_id'
@@ -54,14 +61,16 @@ class Profile(models.Model):
 
 
 class UserProfile(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    mikrotik_id = models.CharField(max_length=20, unique=True, blank=True, null=True)  # Field to store MikroTik ID
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
     state = models.CharField(_('state'), max_length=MAX_LEN, blank=True, null=True)
-    end_time = models.DateTimeField(_('end time'), blank=True, null=True)
-    mikrotik_id = models.CharField(max_length=20, unique=True, blank=True, null=True)  # Field to store MikroTik ID
+    end_time = models.CharField(_('end time'), max_length=MAX_LEN, blank=True, null=True)
+    created  = models.DateTimeField(_('created'), auto_now_add=True, null=True, db_index=True, )
+    modified = models.DateTimeField(_('modified'), auto_now=True, null=True)
 
     class Meta:
-        unique_together = ('user', 'profile', 'state', 'end_time')
         ordering = ['-mikrotik_id']
 
     def __str__(self):
@@ -93,6 +102,8 @@ class Payment(models.Model):
         ('OFFLINE', 'Offline'),
     ]
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    mikrotik_id = models.CharField(max_length=20, unique=True, blank=True, null=True)  # Field to store MikroTik ID
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     profile = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, blank=True)
@@ -105,7 +116,6 @@ class Payment(models.Model):
     currency = models.CharField(max_length=MAX_LEN, default="GHS")
     price = models.DecimalField(max_digits=10, decimal_places=2)
     paystack_reference = models.CharField(max_length=100, null=True, blank=True)
-    mikrotik_id = models.CharField(max_length=20, unique=True, blank=True, null=True)  # Field to store MikroTik ID
 
     class meta:
         ordering = '-trans_end'
@@ -115,12 +125,14 @@ class Payment(models.Model):
     
 
 class Session(models.Model):
+    mikrotik_id = models.CharField(max_length=20, unique=True, blank=True, null=True)  # Field to store MikroTik ID
     session_id = models.CharField(_('Session ID'), max_length=MAX_LEN, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     nas_ip_address = models.GenericIPAddressField(_('NAS IP Address'), blank=True, null=True)
     nas_port_id = models.CharField(_('NAS Port ID'), max_length=MAX_LEN)
     nas_port_type = models.CharField(_('NAS Port Type'), max_length=MAX_LEN)
     calling_station_id = models.CharField(_('Calling Station ID'), max_length=MAX_LEN)
+    user_address = models.GenericIPAddressField(_('User Address'))
     download = models.BigIntegerField(_('Download'))
     upload = models.BigIntegerField(_('Upload'))
     uptime = models.CharField(_('Uptime'), max_length=MAX_LEN)
@@ -129,8 +141,6 @@ class Session(models.Model):
     ended = models.DateTimeField(_('Ended'), null=True, blank=True)
     last_accounting_packet = models.DateTimeField(_('Last Accounting Packet'), null=True, blank=True)
     terminate_cause = models.CharField(_('Terminate Cause'), max_length=MAX_LEN, blank=True, null=True)
-    user_address = models.GenericIPAddressField(_('User Address'))
-    mikrotik_id = models.CharField(max_length=20, unique=True, blank=True, null=True)  # Field to store MikroTik ID
 
     class meta:
         ordering = '-session_id'

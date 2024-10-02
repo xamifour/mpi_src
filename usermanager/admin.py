@@ -47,7 +47,7 @@ class UserAdmin(BaseUserAdmin):
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email', 'phone', 'address', 'notes')}),
         (_('Mikrotik info'), {'fields': ('group', 'otp_secret', 'shared_users', 'attributes', 'plain_password')}),
         (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
-        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+        (_('Important dates'), {'fields': ('last_login', 'date_joined', 'modified')}),
     )
 
     actions = [
@@ -55,7 +55,7 @@ class UserAdmin(BaseUserAdmin):
         'sync_with_mikrotik',
         'sync_from_mikrotik'
     ]
-    readonly_fields = ['payment_button', 'last_login', 'date_joined']
+    readonly_fields = ['payment_button', 'last_login', 'date_joined', 'modified']
 
     def get_urls(self):
         urls = super().get_urls()
@@ -191,11 +191,14 @@ class UserAdmin(BaseUserAdmin):
 
 
 # ------------------------------------------------ profile
-# from .signals import disable_signals  # Import the context manager
-
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ('mikrotik_id', 'name', 'price', 'validity')
     actions = ['sync_profiles_from_mikrotik', 'sync_profiles_to_mikrotik']
+    readonly_fields = ['created', 'modified']
+    fieldsets = (
+        (None, {'fields': ('mikrotik_id', 'name', 'name_for_users', 'price', 'validity', 'starts_when', 'override_shared_users')}),
+        (_('Dates'), {'fields': ('created', 'modified')}),
+    )
 
     def sync_profiles_from_mikrotik(self, request, queryset):
         """
@@ -242,6 +245,7 @@ class ProfileAdmin(admin.ModelAdmin):
     sync_profiles_to_mikrotik.short_description = "Sync profiles to MikroTik"
 
 
+# ------------------------------------------------ user profile
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('mikrotik_id', 'user', 'profile', 'state', 'end_time')
     actions = ['sync_user_profiles_from_mikrotik', 'sync_user_profiles_to_mikrotik']
@@ -293,6 +297,7 @@ class UserProfileAdmin(admin.ModelAdmin):
     sync_user_profiles_to_mikrotik.short_description = "Sync user profiles to MikroTik"
 
 
+# ------------------------------------------------ payment
 class PaymentAdmin(admin.ModelAdmin):
     list_display = ('user_profile', 'method', 'price', 'trans_start', 'trans_end', 'trans_status')
     search_fields = ('user_profile__user__username', 'method', 'price')

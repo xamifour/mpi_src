@@ -84,6 +84,45 @@ def sync_profiles(mikrotik_manager):
         raise
 
 
+# def sync_user_profiles(mikrotik_manager):
+#     """Synchronizes user profiles from MikroTik to the Django database."""
+#     try:
+#         with transaction.atomic():
+#             mikrotik_user_profiles = mikrotik_manager.get_user_profiles()
+#             for mt_user_profile in mikrotik_user_profiles:
+#                 user = User.objects.filter(username=mt_user_profile['user']).first()
+#                 profile = Profile.objects.filter(name=mt_user_profile['profile']).first()
+
+#                 if not user or not profile:
+#                     logger.warning(f"Skipping user profile sync: user '{mt_user_profile['user']}' or profile '{mt_user_profile['profile']}' not found.")
+#                     continue
+
+#                 # Ensure 'end-time' is properly formatted as a DateTimeField
+#                 end_time_str = mt_user_profile.get('end-time', None)
+#                 end_time = datetime.strptime(end_time_str, '%Y-%m-%d %H:%M:%S') if end_time_str else None
+
+#                 try:
+#                     user_profile, created = UserProfile.objects.update_or_create(
+#                         mikrotik_id=mt_user_profile['.id'],  # Use MikroTik ID
+#                         defaults={
+#                             'user': user,
+#                             'profile': profile,
+#                             'state': mt_user_profile.get('state'),
+#                             'end_time': end_time,
+#                         }
+#                     )
+#                     if created:
+#                         logger.info(f'Created new user profile for user: {user.username} with profile: {profile.name}')
+#                     else:
+#                         logger.info(f'Updated user profile for user: {user.username} with profile: {profile.name}')
+
+#                 except IntegrityError as e:
+#                     logger.error(f"Failed to sync user profile for {user.username}: {e}")
+#                     continue
+
+#     except Exception as e:
+#         logger.error(f"Error syncing user profiles: {e}", exc_info=True)
+#         raise
 def sync_user_profiles(mikrotik_manager):
     """Synchronizes user profiles from MikroTik to the Django database."""
     try:
@@ -94,31 +133,37 @@ def sync_user_profiles(mikrotik_manager):
                 profile = Profile.objects.filter(name=mt_user_profile['profile']).first()
 
                 if not user or not profile:
-                    logger.warning(f"Skipping user profile sync: user '{mt_user_profile['user']}' or profile '{mt_user_profile['profile']}' not found.")
+                    logger.warning(f"Skipping sync: User '{mt_user_profile['user']}' or Profile '{mt_user_profile['profile']}' not found.")
                     continue
 
-                # Ensure 'end-time' is properly formatted as a DateTimeField
-                end_time_str = mt_user_profile.get('end-time', None)
-                end_time = datetime.strptime(end_time_str, '%Y-%m-%d %H:%M:%S') if end_time_str else None
+                end_time = mt_user_profile.get('end-time', None)
+                state = mt_user_profile.get('state')
+                mikrotik_id = mt_user_profile['.id']
 
-                try:
-                    user_profile, created = UserProfile.objects.update_or_create(
-                        mikrotik_id=mt_user_profile['.id'],  # Use MikroTik ID
-                        defaults={
-                            'user': user,
-                            'profile': profile,
-                            'state': mt_user_profile.get('state'),
-                            'end_time': end_time,
-                        }
-                    )
-                    if created:
-                        logger.info(f'Created new user profile for user: {user.username} with profile: {profile.name}')
-                    else:
-                        logger.info(f'Updated user profile for user: {user.username} with profile: {profile.name}')
+                # Attempt to get the existing UserProfile by MikroTik ID
+                user_profile, created = UserProfile.objects.get_or_create(
+                    mikrotik_id=mikrotik_id,
+                    defaults={
+                        'user': user,
+                        'profile': profile,
+                        'state': state,
+                        'end_time': end_time
+                    }
+                )
 
-                except IntegrityError as e:
-                    logger.error(f"Failed to sync user profile for {user.username}: {e}")
-                    continue
+                # If the record already exists, check if we need to update it
+                if not created:
+                    # Only update state and end_time if they have changed
+                    update_needed = False
+                    if user_profile.state != state:
+                        user_profile.state = state
+                        update_needed = True
+                    if user_profile.end_time != end_time:
+                        user_profile.end_time = end_time
+                        update_needed = True
+
+                    if update_needed:
+                        user_profile.save()
 
     except Exception as e:
         logger.error(f"Error syncing user profiles: {e}", exc_info=True)
@@ -264,11 +309,34 @@ def delete_user_in_mikrotik(user_id):
 
 
 # --- Profile
+# @shared_task
+# def create_profile_in_mikrotik(profile_id):
+#     """Create a new profile in MikroTik."""
+#     try:
+#         profile = Profile.objects.get(id=profile_id)
+#         response = mikrotik_manager.create_profile(
+#             name=profile.name,
+#             name_for_users=profile.name_for_users,
+#             price=str(profile.price),
+#             starts_when=profile.starts_when,
+#             validity=profile.validity,
+#             override_shared_users=profile.override_shared_users
+#         )
+#         profile.mikrotik_id = response['.id']  # Save MikroTik ID
+#         profile.save()
+#         logger.info(f'Created profile {profile.name} in MikroTik.')
+#     except Profile.DoesNotExist:
+#         logger.error(f'Profile with ID {profile_id} does not exist.')
+#     except Exception as e:
+#         logger.error(f"Error creating Profile {profile_id} in MikroTik: {e}", exc_info=True)
+#         raise
 @shared_task
 def create_profile_in_mikrotik(profile_id):
     """Create a new profile in MikroTik."""
     try:
         profile = Profile.objects.get(id=profile_id)
+        logger.info(f'Creating profile in MikroTik: {profile}')
+
         response = mikrotik_manager.create_profile(
             name=profile.name,
             name_for_users=profile.name_for_users,
@@ -277,9 +345,14 @@ def create_profile_in_mikrotik(profile_id):
             validity=profile.validity,
             override_shared_users=profile.override_shared_users
         )
-        profile.mikrotik_id = response['.id']  # Save MikroTik ID
-        profile.save()
-        logger.info(f'Created profile {profile.name} in MikroTik.')
+
+        if response is not None:
+            profile.mikrotik_id = response['.id']  # Save MikroTik ID
+            profile.save()
+            logger.info(f'Successfully created profile {profile.name} in MikroTik with ID {response[".id"]}.')
+        else:
+            logger.error(f'Failed to create profile {profile.name} in MikroTik: No response received.')
+
     except Profile.DoesNotExist:
         logger.error(f'Profile with ID {profile_id} does not exist.')
     except Exception as e:

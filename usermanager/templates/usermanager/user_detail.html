@@ -297,27 +297,31 @@
                     <table class="table" id="plan_info">
                         <h5>{% trans "Plan Details" %}</h5>
                         <!-- Display related profile details -->
-                        {% for profile in related_profiles %}
+                        {% for userprofile in running_active_profiles %}  
                         <tbody>
                             <tr>
-                                <th style="width: 25%; text-align: right;">Plan Name</th>
-                                <td style="text-align: left;">{{ profile.name }}</td>
+                                <th style="width: 25%; text-align: right;">Plan State</th>
+                                <td style="text-align: left;">{{ userprofile.get_state }}</td>
                             </tr>
                             <tr>
-                                <th style="width: 25%; text-align: right;">Plan Name Public</th>
-                                <td style="text-align: left;">{{ profile.name_for_users }}</td>
+                                <th style="width: 25%; text-align: right;">Plan Name</th>
+                                <td style="text-align: left;">{{ userprofile.profile.name_for_users }}</td>
                             </tr>
                             <tr>
                                 <th style="width: 25%; text-align: right;">Plan Cost</th>
-                                <td style="text-align: left;">{{ profile.price }}</td>
+                                <td style="text-align: left;">{{ userprofile.profile.price }}</td>
                             </tr>
                             <tr>
-                                <th style="width: 25%; text-align: right;">Validity</th>
-                                <td style="text-align: left;">{{ profile.validity }}</td>
+                                <th style="width: 25%; text-align: right;">Plan Period</th>
+                                <td style="text-align: left;">{{ userprofile.profile.validity }}</td>
+                            </tr>
+                            <tr>
+                                <th style="width: 25%; text-align: right;">Valid Until</th>
+                                <td style="text-align: left;">{{ userprofile.end_time }}</td>
                             </tr>
                             <tr>
                                 <th style="width: 25%; text-align: right;">Override Shared Users</th>
-                                <td style="text-align: left;">{{ profile.override_shared_users }}</td>
+                                <td style="text-align: left;">{{ userprofile.profile.override_shared_users }}</td>
                             </tr>
                         </tbody>
                         {% endfor %}

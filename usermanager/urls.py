@@ -18,7 +18,7 @@ urlpatterns = [
     path('sessions/', SessionListView.as_view(), name='session_list'),
 
     # Payment paths
-    path('initiate-payment/<int:profile_id>/', InitiatePaymentView.as_view(), name='initiate_payment'),
+    path('initiate-payment/<uuid:profile_id>/', InitiatePaymentView.as_view(), name='initiate_payment'),
     path('payment/verify/', VerifyPaymentView.as_view(), name='verify_payment'),
     path('payment/success/', payment_success, name='payment_success'),
     path('payment/failed/', payment_failed, name='payment_failed'),

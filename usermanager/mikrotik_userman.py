@@ -108,7 +108,23 @@ class MikroTikUserManager:
             logger.error(f"Error retrieving profile '{profile_id}': {e}")
             raise RuntimeError(f"Error retrieving profile '{profile_id}': {e}")
 
+    # def create_profile(self, name: str, name_for_users: str, price: str, starts_when: str, validity: str, override_shared_users: str = 'off'):
+    #     data = {
+    #         'name': name,
+    #         'name-for-users': name_for_users,
+    #         'price': price,
+    #         'starts-when': starts_when,
+    #         'validity': validity,
+    #         'override-shared-users': override_shared_users
+    #     }
+    #     return self._request('PUT', 'rest/user-manager/profile', data=data)
     def create_profile(self, name: str, name_for_users: str, price: str, starts_when: str, validity: str, override_shared_users: str = 'off'):
+        # Check for existing profiles
+        existing_profiles = self.get_profiles()
+        if any(profile['name'] == name for profile in existing_profiles):
+            logger.warning(f"Profile '{name}' already exists. Skipping creation.")
+            return None
+
         data = {
             'name': name,
             'name-for-users': name_for_users,
@@ -117,7 +133,16 @@ class MikroTikUserManager:
             'validity': validity,
             'override-shared-users': override_shared_users
         }
-        return self._request('PUT', 'rest/user-manager/profile', data=data)
+
+        try:
+            response = self._request('PUT', 'rest/user-manager/profile', data=data)
+            if response is None:
+                logger.error("Profile creation failed: No response received.")
+                return None
+            return response
+        except RuntimeError as e:
+            logger.error(f"Error creating profile: {e}")
+            return None  # Ensure a None response if there's an error
 
     def update_profile(self, profile_id: str, **kwargs: Optional[str]):
         data = {k.replace('_', '-'): v for k, v in kwargs.items() if v}

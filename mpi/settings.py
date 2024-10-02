@@ -23,7 +23,8 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-^rtb8vn##v7c-c0n9p(&((=dv)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,192.168.88.230').split(',')
+# ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,192.168.88.249').split(',')
+ALLOWED_HOSTS = ['localhost', '192.168.88.249']
 
 
 # Application definition
@@ -201,6 +202,8 @@ CELERY_BEAT_SCHEDULE = {
 
 # # run celery server
 # redis-server 
+# brew services stop redis
+# pkill redis-server
 
 # Start the Celery worker:
 # celery -A your_project worker --loglevel=info
